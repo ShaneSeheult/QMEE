@@ -10,7 +10,6 @@ library(tidyverse)
 dd <- read_csv("data/portal_data_joined.csv")
 print(dd)
 
-
 ## select (grabs columns)
 select(dd, plot_id, species_id, weight)
 select(dd, -record_id, -species_id)
