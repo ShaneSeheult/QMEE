@@ -31,3 +31,11 @@ dd.02 <- (dd
 
 dd %>% mutate(weight_kg = weight/1000, squared_weight = weight_kg^2) # Can be chained or put into separate lines (mulitple %>% mutate lines)
 
+# ---- RDS Files ------
+# saveRDS(x, "x.rds") - x is a dataframe and you can name it anything (as long as it is followed by .rds)
+# Right click in Git tab and let it know it should not try to save a copy of this file
+# .gitignore should pop back up with an M (modified) - You can make patterns in this file, ignore anything that ends in .rds
+# You then want to commit .gitignore
+# x <- readRDS("x.rds") - read this object back in
+# save("x", "y", file = "mystuff.rda")
+# L <- load ("mystuff.rda") - Loads .rds files that you have saved into work space!
