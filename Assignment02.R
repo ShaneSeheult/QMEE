@@ -85,8 +85,6 @@ shapiro.test(dd.02$`log_JulianDate`)
 # The log transformed data is not normal either, likely because I am using Julian 
 # Date as the depedent variable. 
 
-# sqrt(max(x+1) - x) for negatively skewed data - TRY IT!
-
 ## ---- Do the proportions of Same Sex and Different Sex pup pairs differ? -----
 Matches <- dd$Sex...2 == dd$`Sibling Sex`
 summary(Matches)
