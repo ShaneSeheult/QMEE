@@ -15,7 +15,26 @@ dd <- read_csv(teat_project_csv)
 print(dd)
 summary(dd)
 
-## ---- Clean up data and ensure that columns are what you expect --------------
+## This is a good way to see summary of character variables (There is a more-complicated, but updated version)
+summary(dd %>% mutate_if(is.character, as.factor))
+
+# FIXME: Look for problems in the data set (dd).
+problems(dd) 
+# The tibble of problems has 0 rows, thus there are no problems in my data set (dd).
+
+# ----- Clean up data and ensure that columns are what you expect --------------
+## ---- Correct Column Names for Sex -------------------------------------------
+
+# Note, Sibling column was repeated twice - redundancy! 
+
+
+## ---- Correct Column Types ---------------------------------------------------
+
+# E.g: 
+#villageTable <- (villageTable
+#                 %>% mutate(village=as.factor(village))
+#)
+#summary(villageTable)
 
 ## ---- Do Birthdays differ, on average, between Groups? -----------------------
 Wild_Caught.df <- filter(dd, Group == "Wild-Caught")
@@ -30,7 +49,7 @@ t.test(x = Wild_Caught.df$'Julian Date', y = Captive.df$'Julian Date')
 
 ## ---- Plot the Data & look for anomalies ------------------------------------
 
-fig01 <- ggplot(data = dd, aes(y = dd$`Julian Date`, x = Group, na.rm = T)) +
+fig01 <- ggplot(data = dd, aes(y = `Julian Date`, x = Group, na.rm = T)) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank(), panel.border = element_blank()) +
   theme(axis.line = element_line(color = "black", size = 0.4)) +
@@ -52,7 +71,7 @@ lin.mod <- lm(dd$`Julian Date`~ dd$Group)
 qqnorm(residuals(lin.mod)); qqline(residuals(lin.mod))
 
 ## Histogram of Data 
-fig02 <- ggplot(data = dd, aes(x = dd$`Julian Date`)) +
+fig02 <- ggplot(data = dd, aes(x = `Julian Date`)) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank(), panel.border = element_blank()) +
   theme(axis.line = element_line(color = "black", size = 0.4)) +
@@ -76,7 +95,7 @@ dd.02 <- dd %>% mutate(log_JulianDate = log(dd$`Julian Date`))
 
 qqnorm(dd.02$log_JulianDate, main = "log Julian Date");qqline(dd.02$`log_JulianDate`)
 
-fig03 <- ggplot(data = dd.02, aes(x = dd.02$`log_JulianDate`)) +
+fig03 <- ggplot(data = dd.02, aes(x = `log_JulianDate`)) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank(), panel.border = element_blank()) +
   theme(axis.line = element_line(color = "black", size = 0.4)) +
