@@ -52,7 +52,7 @@ fig02 <- ggplot(data = dd, aes(x = dd$`Julian Date`)) +
   theme(axis.line = element_line(color = "black", size = 0.4)) +
   ylab('Density') + xlab('Day') +
   scale_y_continuous(limits = c(0,20), expand = c(0,0)) +
-  geom_histogram() +
+  geom_histogram(bins = 20) +
   theme(legend.position = c(0.85, 0.85), legend.title = element_blank()) 
 fig02
 
@@ -84,6 +84,8 @@ shapiro.test(dd.02$`log_JulianDate`)
 
 # The log transformed data is not normal either, likely because I am using Julian 
 # Date as the depedent variable. 
+
+# sqrt(max(x+1) - x) for negatively skewed data - TRY IT!
 
 ## ---- Do the proportions of Same Sex and Different Sex pup pairs differ? -----
 Matches <- dd$Sex...2 == dd$`Sibling Sex`
