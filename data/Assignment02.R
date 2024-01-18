@@ -1,15 +1,21 @@
 #Author: Shane Seheult 
 
+# Designed to be run from ...
+
 ## ---- libraries --------------------------------------------------------------
 library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 library(cowplot)
 library(gganimate)
+
 ## ---- Import Data ------------------------------------------------------------
 teat_project_csv <- "Teat_Preferance_QMEE_Project.csv"
 dd <- read_csv(teat_project_csv)
 print(dd)
+summary(dd)
+
+## ---- Clean up data and ensure that columns are what you expect --------------
 
 ## ---- Do Birthdays differ, on average, between Groups? -----------------------
 Wild_Caught.df <- filter(dd, Group == "Wild-Caught")
