@@ -19,11 +19,12 @@ problems(dd)
 # The tibble of problems has 0 rows, thus there are no problems in my data set (dd).
 
 # ----- Clean up data and ensure that columns are what you expect --------------
-## ---- Correct Column Names for Sex -------------------------------------------
+## ---- Correct Column Name for Sex --------------------------------------------
 dd <- select(dd, -Sex...6)
 # Note, The column used to identify the bats sex was repeated twice - redundancy! 
 # This line of code removes the second occurernce of the column
 
+## --- Correct Column format for Birthday --------------------------------------
 dd$Birthday <- ymd(as.character(dd$Birthday))
 # This formats the birthday variable into type <date> 
 
