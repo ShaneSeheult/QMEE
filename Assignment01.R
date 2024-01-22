@@ -31,3 +31,5 @@ prop.test(c(19,37), c(60,60))
 
 # The results suggest that there is a higher proportion of Different Sex Siblings compared to Same Sex Siblings
 # (X^2 = 9.68, df = 1, p = 0.002, 95% CI [-0.487, -0.113]).
+
+## JD: Looks good, thanks! Grade is 2 (Fine)
