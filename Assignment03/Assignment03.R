@@ -20,6 +20,7 @@ theme.obj <- theme(panel.grid.major = element_blank(), panel.grid.minor = elemen
   theme(axis.text.x = element_text(size = 12), axis.text.y = element_text(size = 12)) +
   theme(axis.title.x = element_text(size = 12), axis.title.y = element_text(size = 12))
 
+
 ## ---- Figure - Mean +/- Std.Error of Birthdays -------------------------------
 print(dd 
   %>% group_by(Group)
@@ -40,12 +41,28 @@ Fig.01 <- ggplot(data = Days.df, aes(y = Mean.Days, x = Group)) +
   geom_errorbar(aes(ymin = Mean.Days - Std.Err.Days, ymax = Mean.Days + Std.Err.Days), color = "black", width = 0.1)
 Fig.01
 
+## ---- Figure - Boxplots ------------------------------------------------------
+Fig.02 <- ggplot(data = dd, aes(y = Days, x = Group, na.rm = T)) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), panel.border = element_blank()) +
+  theme(axis.line = element_line(color = "black", size = 0.4)) +
+  theme(axis.text.x = element_text(size = 12), axis.text.y = element_text(size = 12)) +
+  theme(axis.title.x = element_text(size = 12), axis.title.y = element_text(size = 12)) +
+  ylab('Julian Date') + xlab('Group') +
+  geom_boxplot(fill = "gray") 
+Fig.02
+
+# Note, box plots are considered descriptive. Here we see what is occuring in the population. 
+
+# Neither box plots or mean +/- standard error plots are superior to the other, they are just better for different things.
+
+
 ## ---- Figure - Switch ~ Birthday ---------------------------------------------
-Fig.02 <- ggplot(data = dd, aes(y = Switch, x = Birthday, color = Group)) +
+Fig.03 <- ggplot(data = dd, aes(y = Switch, x = Birthday, color = Group)) +
   geom_point(position = position_dodge2(width = 0.4)) + 
   theme.obj + 
   geom_smooth(method = "lm")
-Fig.02 
+Fig.03 
 
 ## ---- Figure - Histogram of Day of First Switch ------------------------------
 #Fig.03 <- ggplot(data = dd, aes(x = Switch)) +
@@ -58,3 +75,6 @@ Fig.02
 ## ---- Linear Model -----------------------------------------------------------
 lin.mod <- lm(dd$Switch~ dd$Group)
 check_model(lin.mod)
+
+
+# Check Source with Echo for Errors! 
