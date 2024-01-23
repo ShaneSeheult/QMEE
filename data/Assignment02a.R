@@ -6,6 +6,7 @@
 library(tidyverse)
 
 ## ---- Import Original Data ---------------------------------------------------
+## BMB: can we rename "Preferance" to "Preference" please ... ?
 teat_project_csv <- "Teat_Preferance_QMEE_Project.csv"
 dd <- read_csv(teat_project_csv)
 print(dd)
@@ -25,6 +26,10 @@ dd <- select(dd, -Sex...6)
 # This line of code removes the second occurernce of the column
 
 ## --- Correct Column format for Birthday --------------------------------------
+## BMB: why not use mutate() + pipes?
+## dd %>% mutate(across(Birthday, ymd))
+## (I don't think you need as.character())
+
 dd$Birthday <- ymd(as.character(dd$Birthday))
 # This formats the birthday variable into type <date> 
 
@@ -36,7 +41,13 @@ dd <- (dd
   %>% mutate(Bat.ID = as.factor(Bat.ID))
   %>% mutate(Sex = as.factor(Sex))
   %>% mutate(Group = as.factor(Group))
-  %>% mutate(Sib.Sex = as.factor(Sib.Sex)))
+    %>% mutate(Sib.Sex = as.factor(Sib.Sex)))
+## BMB:
+
+dd <- dd %>% mutate(across(c(Bat.ID, Sex, Group, Sib.Sex), as.factor))
+
+## BMB: you could pipe all of these together ...
+
 summary(dd)
 
 ## --- SaveRDS after cleaning data ---------------------------------------------

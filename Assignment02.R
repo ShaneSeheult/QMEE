@@ -9,13 +9,19 @@ library(gganimate)
 ## ---- Import Data ------------------------------------------------------------
 teat_project_csv <- "Teat_Preferance_QMEE_Project.csv"
 dd <- read_csv(teat_project_csv)
+## BMB:: why do we have two identical sex columns? Should clean this ...
+all(dd$Sex...2 == dd$Sex...6) ## TRUE
 print(dd)
 
 ## ---- Do Birthdays differ, on average, between Groups? -----------------------
 Wild_Caught.df <- filter(dd, Group == "Wild-Caught")
 Captive.df <- filter(dd, Group == "Captive")
 
+## BMB: in general you should avoid splitting this way if you can.
 t.test(x = Wild_Caught.df$'Julian Date', y = Captive.df$'Julian Date')
+
+## this is better (also good to rename vars to eliminate spaces!)
+t.test(`Julian Date` ~ Group, data = dd)
 
 # The results suggest that there is a significant difference (t(26.9) = 3.37, p = 0.02, 95%CI [0.70, 2.90])
 # between birthdays of pups born to wild-caught females and pups born to females in captivity.
@@ -24,6 +30,7 @@ t.test(x = Wild_Caught.df$'Julian Date', y = Captive.df$'Julian Date')
 
 ## ---- Plot the Data & look for anomalies ------------------------------------
 
+## BMB: don't repeat all this theme() stuff. Create your own theme object and add it to the plot.
 fig01 <- ggplot(data = dd, aes(y = dd$`Julian Date`, x = Group, na.rm = T)) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank(), panel.border = element_blank()) +
@@ -31,19 +38,24 @@ fig01 <- ggplot(data = dd, aes(y = dd$`Julian Date`, x = Group, na.rm = T)) +
   theme(axis.text.x = element_text(size = 12), axis.text.y = element_text(size = 12)) +
   theme(axis.title.x = element_text(size = 12), axis.title.y = element_text(size = 12)) +
   ylab('Julian Date') + xlab('Group') +
-        geom_boxplot()
+        geom_boxplot(fill = "gray") ## see https://clauswilke.com/dataviz/avoid-line-drawings.html
 fig01
 
-# The box plots show no outliers (i.e. there are no data points exceeding the whiskers of the boxplots)
-# However, the Julian Dates for the captive group tend to be skewed to lower values (as evidenced by the bold line
+## The box plots show no outliers (i.e. there are no data points exceeding the whiskers of the boxplots)
+
+## However, the Julian Dates for the captive group tend to be skewed to lower values (as evidenced by the bold line
 # of the box plot).
 
 ## ---- Looking for Normality in Data ------------------------------------------
 qqnorm(dd$`Julian Date`, main = "Julian Date");qqline(dd$`Julian Date`)
 
+## BMB: don't do this (for reasons we will explain). It's irrelevant
+## whether the *marginal* distribution of your data is Normal or not
+
 ## And in the residuals 
 lin.mod <- lm(dd$`Julian Date`~ dd$Group)
 qqnorm(residuals(lin.mod)); qqline(residuals(lin.mod))
+## BMB: this is  more relevant
 
 ## Histogram of Data 
 fig02 <- ggplot(data = dd, aes(x = dd$`Julian Date`)) +
@@ -56,10 +68,14 @@ fig02 <- ggplot(data = dd, aes(x = dd$`Julian Date`)) +
   theme(legend.position = c(0.85, 0.85), legend.title = element_blank()) 
 fig02
 
+## BMB: histograms aren't great for discrete data (unless you make the
+## bins wider)
+
 # The data appear to be normally distributed as seen by the qqnorm plot (i.e. the data points
 # do not drastically deviate from the qqline). and as per the histogram plot (fig02), although the 
 # data do seem to be slightly right skewed. 
 
+## BMB: don't do it!
 shapiro.test(dd$`Julian Date`)
 
 # The results of the Shapiro-Wilk Normality test suggest that the data are not normally
@@ -83,7 +99,7 @@ fig03
 shapiro.test(dd.02$`log_JulianDate`)
 
 # The log transformed data is not normal either, likely because I am using Julian 
-# Date as the depedent variable. 
+# Date as the dependent variable. 
 
 ## ---- Do the proportions of Same Sex and Different Sex pup pairs differ? -----
 Matches <- dd$Sex...2 == dd$`Sibling Sex`
@@ -92,8 +108,12 @@ summary(Matches)
 # with using summary(df) to see that Bat.ID has a length of 60. We can then calculate the proportion Same-
 # Sibling Matches (i.e. TRUE) and the proportion of Different Sibling Matches (i.e. FALSE).
 
+
 prop_SameSib <- 19 / 60
 prop_DiffSib <- 37 / 60
+
+## BMB: you should avoid hard-coding numbers
+with(dd, table(`Sibling Sex`==Sex...2))
 
 # We can also test if the two proportions differ from one another:
 
