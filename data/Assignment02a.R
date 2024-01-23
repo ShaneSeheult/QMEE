@@ -33,8 +33,11 @@ dd <- select(dd, -Sex...6)
 dd$Birthday <- ymd(as.character(dd$Birthday))
 # This formats the birthday variable into type <date> 
 
+dd$Switch = dd$Birthday + dd$`Day of 1st Switch`
+dd <- dd %>% select(-`Day of 1st Switch`)
+
 ## ---- Correct Column Types ---------------------------------------------------
-dd <- rename(dd, c(Bat.ID = `Bat ID`, Sex = Sex...2, Julian.Date = `Julian Date`, Sib.Sex = `Sibling Sex`))
+dd <- rename(dd, c(Bat.ID = `Bat ID`, Sex = Sex...2, Julian.Date = `Julian Date`, Sib.Sex = `Sibling Sex` ))
 # This code renames the columns, making it easier to call them in  future code
 
 dd <- (dd
