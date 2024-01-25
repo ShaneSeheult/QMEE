@@ -73,8 +73,14 @@ Fig.03
 #Fig.03
 
 ## ---- Linear Model -----------------------------------------------------------
-lin.mod <- lm(dd$Switch~ dd$Group)
+lin.mod <- lm(Days ~ Group, data = dd)
 check_model(lin.mod)
+# Note, I get an error. Error: `check_model()` not implemented for models of class `lm` yet.
+
+m1 <- lm(mpg ~ as.factor(cyl), data = mtcars)
+check_model(m1)
+# Note, this modelisa ble to create the plot. 
+
 
 
 # Check Source with Echo for Errors! 
