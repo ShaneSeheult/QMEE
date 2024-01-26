@@ -51,6 +51,12 @@ dd <- dd %>% mutate(across(c(Bat.ID, Sex, Group, Sib.Sex), as.factor))
 
 ## BMB: you could pipe all of these together ...
 
+dd <- (dd
+       %>% filter(Bat.ID != "Sky101_M_G")
+       %>% filter(Switch != is.na(Switch))
+)
+
+
 summary(dd)
 
 ## --- SaveRDS after cleaning data ---------------------------------------------
