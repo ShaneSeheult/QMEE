@@ -111,8 +111,20 @@ ggsave("Fig03.pdf", plot = Fig.03, device = "pdf", width = 100, height = 100, un
 lin.mod <- lm(Days ~ Group, data = dd)
 check_model(lin.mod)
 
+
+methods("check_model")
+## debug(performance:::check_model.default)
+## .check_assumptions_linear(x, minfo, verbose, 
+##         ...)
+##+ Error in Ops.difftime((f - mean(f)), 2) : 
+##  '^' not defined for "difftime" objects
+
 lin.mod2 <- lm(as.numeric(Days) ~ as.factor(Group), data = dd)
 check_model(lin.mod2)
+## debug(performance:::.check_assumptions_linear)
+## + Error in stats::qf(0.5, ncol(x), nrow(x) - ncol(x)) : 
+##  Non-numeric argument to mathematical function
+
 
 lin.mod3 <- lme4::lmer(as.numeric(Days) ~ Group + (1 | Sex), data = dd)
 check_model(lin.mod3)
@@ -125,6 +137,13 @@ check_model(lin.mod3)
 # Note, this model using base-R data (data = mtcars) is able to create the plot. 
 m1 <- lm(mpg ~ as.factor(cyl), data = mtcars)
 check_model(m1)
+
+## performance::check_model is doing something weird, such that converting
+## the variable to numeric *within the formula* screws it up (it shouldn't!)
+lin.mod3 <- lm(Days ~ Group, data = mutate(dd, across(Days, as.numeric)))
+check_model(lin.mod3)
+
+## see https://github.com/easystats/performance/issues/678
 
 # For my analysis I will continue using lin.mod2 which treats Day as numeric and Group as factor:
 # Despite the check_model() function not working, I am able to create (some) of the plots from the performance package
