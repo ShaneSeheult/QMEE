@@ -1,7 +1,9 @@
 # Author: Shane Seheult
 # Script Name: Assignment03.R
 
-# This Script is meant to be run from the directory ShaneSeheult/QMEE/Assignment03/Assignment03.R
+# This Script is meant to be run from the main repo directory 
+## JD: Changed this because PupBirthdaysClean is not in Assignment03/
+## There were other alternatives
 
 # ---- libraries ---------------------------------------------------------------
 library(tidyverse)
@@ -11,6 +13,8 @@ library(performance)
 library(plotrix)
 library(dotwhisker)
 #library(qqplotr)
+
+## JD: Props for doing this, but you didn't explain it, and you didn't point to it correctly. You need to not only point to where it is (not in this subdirectory), but it's best to have a note that we need to make it.
 # ---- Import & Read Data (RDS) ------------------------------------------------
 dd <- readRDS("PupBirthdaysClean.rds") 
 summary(dd)
