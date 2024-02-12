@@ -10,6 +10,7 @@ library(ggpubr)
 library(performance)
 library(plotrix)
 library(dotwhisker)
+library(randomForest)
 #library(qqplotr)
 # ---- Import & Read Data (RDS) ------------------------------------------------
 dd <- readRDS("PupBirthdaysClean.rds") 
