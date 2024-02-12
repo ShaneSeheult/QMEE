@@ -1,0 +1,44 @@
+library(tidyverse)
+library(tidyverse)
+library(tidyverse)
+library(ggplot2)
+library(ggplot2)
+library(ggplot2)
+library(ggplot2)
+library(ggpubr)
+library(performance)
+library(plotrix)
+library(dotwhisker)
+# ---- Import & Read Data (RDS) ------------------------------------------------
+dd <- readRDS("PupBirthdaysClean.rds")
+summary(dd)
+## ---- Figure Theme Object ----------------------------------------------------
+setwd("~/Desktop/QMEE")
+dd <- readRDS("PupBirthdaysClean.rds")
+summary(dd)
+## ---- Figure Theme Object ----------------------------------------------------
+theme.obj <- theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), panel.border = element_blank()) +
+theme(axis.line = element_line(color = "black", linewidth = 0.4)) +
+theme(axis.text.x = element_text(size = 12), axis.text.y = element_text(size = 12)) +
+theme(axis.title.x = element_text(size = 12), axis.title.y = element_text(size = 12))
+dd$Days <- dd$Switch - dd$Birthday
+Days.df <- (dd
+%>% group_by(Group)
+%>% summarise(Mean.Days = mean(Days, na.rm = TRUE), Std.Err.Days = std.error(Birthday, na.rm = TRUE))
+)
+Fig.01 <- ggplot(data = Days.df, aes(y = Mean.Days, x = Group)) +
+geom_point() +
+theme.obj +
+scale_y_continuous(limits = c(0,5)) +
+ylab("Average number of days until first switch") +
+geom_errorbar(aes(ymin = Mean.Days - Std.Err.Days, ymax = Mean.Days + Std.Err.Days), color = "black", width = 0.1)
+Fig.01
+with(dd,
+Days <- as.integer(Days))
+lin.mod <- lm(as.numeric(Days) ~ Group, data = dd)
+check_model(lin.mod)
+lin.mod2 <- lm(Days ~ Group, data = dd)
+check_model(lin.mod2)
+m1 <- lm(mpg ~ as.factor(cyl), data = mtcars)
+check_model(m1)

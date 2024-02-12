@@ -11,6 +11,7 @@ library(plotrix)
 library(dotwhisker)
 library(randomForest)
 library(emmeans)
+
 ## ---- Import and Read Data (RDS) ---------------------------------------------
 dd <- readRDS("PupBirthdaysClean.rds")
 summary(dd)
@@ -31,18 +32,29 @@ summary(dd)
 dd$Days <- dd$Switch - dd$Birthday
 # Note, this is creating a new variable called 'Days' which is a difference between day of first switch and birthday.
 
-Days.df <- (dd 
-            %>% group_by(Group)
-            %>% summarise(Mean.Days = mean(Days, na.rm = TRUE), Std.Err.Days = std.error(Birthday, na.rm = TRUE))
-)
-
 lin.mod <- lm(as.numeric(Days) ~ as.factor(Group), data = dd)
 summary(lin.mod)
 
+## --- Diagnostic Plots (performance) ------------------------------------------
 plot(check_posterior_predictions(lin.mod)) # Specific
+# posterior predictions: checks for discrepancies between data and fitted models. It helps to examine if the type of model being used 
+# fits the model well. This plot is simulating data using models and comparing discrepancies between real and simulated data.
+# This figure suggests that the model has a relatively good fit to the data, but that the observed data is left skewed relative to the 
+# models predictions. This suggests that there may be a model that better predicts the observed data.
+
 plot(check_heteroscedasticity(lin.mod)) # General
-plot(check_distribution(lin.mod)) # Specific / General
-plot(check_normality(lin.mod)) # Specific
+# heteroscedasticity: checks for the assumption of homogeneity in variance. This plot suggests that there is not 
+# equal variance as the reference line is not flat and horizontal.
+
+# To address this, I have transformed my data using a log function:
+dd.log <- (dd
+           %>% mutate(Days = log(as.numeric(Days)))
+)
+
+lin.mod.log <- lm(is.finite(Days) ~ as.factor(Group), data = dd.log)
+plot(check_heteroscedasticity(lin.mod.log)) # General
+# This correction seems to have "flattened out" the line, addressing the lack of heteroscedasticity in the un-transformed data
+# However, I had to omit data  using this approach, and do not believe this is appropriate.
 
 # Note, The above plots are all diagnostic plots. I have not adjusted the visual aspects o these graphs (good practice to be able to
 #     examine and summarize on the fly). These plots are all visualizing assumptions/errors associated with the model fit for the data and
@@ -51,12 +63,7 @@ plot(check_normality(lin.mod)) # Specific
 # Some of these diagnostics are using generic methods (e.g. residuals vs fitted model) and some are using specific methods (residuals 
 #     vs predictors). I have outlined which plots are doing which.
 
-# posterior predictions: checks for discrepancies between data and fitted models. It helps to examine if the type of model being used 
-#     fits the model well
-# heteroscedasticity: checks for the assumption of equal variance. This plot suggests that there is not equal variance as the reference
-#     line is not flat and horizontal
-# normality: this checks whether the residuals of the regression model are normally distributed 
-
+## ---- Inferential Plot (Emmeans) ---------------------------------------------
 emm.lin.mod <- emmeans(lin.mod, spec = ~ Group)
 plot(pairs(emm.lin.mod)) + geom_vline(xintercept = c(0,-5,5), lty = 2) + xlim(-5,5) 
 

@@ -3,3 +3,15 @@
 .RData
 .Ruserdata
 .DS_Store
+PupBirthdaysClean.rds
+CA_homicide.csv
+CA_popdat.csv
+canadaRegions.csv
+homMerge.rds
+homRead.rda
+25Jan2024_GetData.R
+25Jan2024_Graph.R
+25Jan2024_MergeData.R
+Fig01.pdf
+Fig02.pdf
+Fig03.pdf
