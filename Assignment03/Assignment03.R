@@ -1,7 +1,9 @@
 # Author: Shane Seheult
 # Script Name: Assignment03.R
 
-# This Script is meant to be run from the directory ShaneSeheult/QMEE/Assignment03/Assignment03.R
+# This Script is meant to be run from the main repo directory 
+## JD: Changed this because PupBirthdaysClean is not in Assignment03/
+## There were other alternatives
 
 # ---- libraries ---------------------------------------------------------------
 library(tidyverse)
@@ -10,8 +12,15 @@ library(ggpubr)
 library(performance)
 library(plotrix)
 library(dotwhisker)
+<<<<<<< HEAD
+=======
+
+## JD The code doesn't run without this package (not sure why), so it's good practice to call on it here.
+>>>>>>> 5b330f61eee2bef12f97c98cc96e585e95a1d943
 library(randomForest)
 #library(qqplotr)
+
+## JD: Props for doing this, but you didn't point to it correctly (it's not in this subdirectory, where you said to run the script).
 # ---- Import & Read Data (RDS) ------------------------------------------------
 dd <- readRDS("PupBirthdaysClean.rds") 
 summary(dd)
@@ -32,6 +41,7 @@ theme.obj <- theme(panel.grid.major = element_blank(), panel.grid.minor = elemen
 dd$Days <- dd$Switch - dd$Birthday
 # Note, this is creating a new variable called 'Days' which is a diffeence between day of first switch and birthday.
 
+## JD: Don't love all of these na.rm statements. Do you have NAs? They should be cleaned (and maybe noted) upstream. Like produce a clean df for this analysis. Just a thought; there could be issues here I don't know about
 Days.df <- (dd 
             %>% group_by(Group)
             %>% summarise(Mean.Days = mean(Days, na.rm = TRUE), Std.Err.Days = std.error(Birthday, na.rm = TRUE))
@@ -76,6 +86,7 @@ ggsave("Fig02.pdf", plot = Fig.02, device = "pdf", width = 100, height = 100, un
 # Neither box plots or mean +/- standard error plots are superior to the other, they are just better for different things.
 # Note, I have specified the y axis to be continuous, to remove a warning message that states that R does not know how to pick
 #     a scale for type <difftime> and  defaults to continuous anyways. 
+## JD: Good
 # Note, I have set the y-axis scale to be in the order of days with the breaks spaced out by days (i.e. integer number). It is easy for
 #     viewers to understand/visualize whole days as opposed to thinking about what non-integer days are (e.g. what is 4.35 days?) 
 # Note, I have used grey scale for the box plot colors ## see https://clauswilke.com/dataviz/avoid-line-drawings.html
@@ -100,6 +111,8 @@ print(Fig.03)
 
 ggsave("Fig03.pdf", plot = Fig.03, device = "pdf", width = 100, height = 100, units = "mm")
 
+## JD: This ggsave looks much worse than the default-parameters version that I got from the print() statement above (under pdf())
+
 # Note, the dotted line has a slope of 1. Data points on this line suggest that the pup switched
 #     which teat it was suckling on the day it was born. By definition, data points cannot fall below this
 #     dotted line (i.e. pups cannot switch teats before they are born). Some data points may be slightly 
@@ -109,11 +122,27 @@ ggsave("Fig03.pdf", plot = Fig.03, device = "pdf", width = 100, height = 100, un
 #     help to alleviate any ambiguity in the interpretation of data points.
 
 ## ---- Linear Model -----------------------------------------------------------
-lin.mod <- lm(Days ~ Group, data = dd)
-check_model(lin.mod)
+## JD: The script breaks here, but the note is down below.
+## Please just make sure to give us a script we can run?
+## lin.mod <- lm(Days ~ Group, data = dd)
+## check_model(lin.mod)
 
+
+## JD: Not really part of your script; comment out or delete when you've done it
+## methods("check_model")
+
+## debug(performance:::check_model.default)
+## .check_assumptions_linear(x, minfo, verbose, 
+##         ...)
+##+ Error in Ops.difftime((f - mean(f)), 2) : 
+##  '^' not defined for "difftime" objects
+
+## JD: These models run and check for me; maybe you need to update something
 lin.mod2 <- lm(as.numeric(Days) ~ as.factor(Group), data = dd)
 check_model(lin.mod2)
+## debug(performance:::.check_assumptions_linear)
+## + Error in stats::qf(0.5, ncol(x), nrow(x) - ncol(x)) : 
+##  Non-numeric argument to mathematical function
 
 lin.mod3 <- lme4::lmer(as.numeric(Days) ~ Group + (1 | Sex), data = dd)
 check_model(lin.mod3)
@@ -123,9 +152,20 @@ check_model(lin.mod3)
 #   (1) as.numeric, and (2) as.integer. I have also tried formulating a model using lme4:lmer, but was unsuccessful using
 #   this method as well. I have left this code in - despite the fact it produces errors - so that you can view.
 
+## JD: Do not do this, please! Comment the code out and leave the note. Email us if we don't see it.
+## JD: Good job diagnosing the problem; not sure why as.numeric wouldn't work
+## JD: Seems to work for me, as discussed elsewhree
+
 # Note, this model using base-R data (data = mtcars) is able to create the plot. 
 m1 <- lm(mpg ~ as.factor(cyl), data = mtcars)
 check_model(m1)
+
+## performance::check_model is doing something weird, such that converting
+## the variable to numeric *within the formula* screws it up (it shouldn't!)
+lin.mod3 <- lm(Days ~ Group, data = mutate(dd, across(Days, as.numeric)))
+check_model(lin.mod3)
+
+## see https://github.com/easystats/performance/issues/678
 
 # For my analysis I will continue using lin.mod2 which treats Day as numeric and Group as factor:
 # Despite the check_model() function not working, I am able to create (some) of the plots from the performance package
@@ -153,3 +193,5 @@ plot(check_normality(lin.mod2)) # Specific
 # heteroscedasticity: checks for the assumption of equal variance. This plot suggests that there is not equal variance as the reference
 #     line is not flat and horizontal
 # normality: this checks whether the residuals of the regression model are normally distributed 
+
+## JD: Good and ambitious. Several issues in running. I would prefer next time a more focused assignment (just so that I don't have to look at so many plots). Grade: 2.1
