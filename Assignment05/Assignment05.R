@@ -54,6 +54,8 @@ plot(check_posterior_predictions(lin.mod)) # Specific
 
 ## It may just be that your model is too simple for the performance tools; it's just a two-group model, right? You could try something like the default plots:
 
+## Also, weren't there scary warnings; try not to ignore warnings.
+
 plot(lin.mod)
 
 ## … or even just some simpler plots, like a boxplot.
