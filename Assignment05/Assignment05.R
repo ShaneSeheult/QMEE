@@ -32,6 +32,8 @@ dd <- readRDS("PupBirthdaysClean.rds")
 
 ## JD: The alternative hypothesis you list has no clear semantic content beyond the null, so it's not clear what the point is. If you're just looking to see _if you see_ clear differences of any kind, you can stop with the null I guess (or say that you are looking for differences in the mean).
 ## If you have an actual hypothesis (one group will give birth earlier, for example), it's OK to state that.
+## BMB: in fact, it's *better* to state a directional hypothesis.  (Even that is pretty weak, as if something big/clear is happening [even if it's not the process
+##  you're thinking of] there's a 50/50 chance that it will go in the direction you guessed ...
 
 ## ---- Linear Model -----------------------------------------------------------
 dd$Days <- as.numeric(dd$Switch - dd$Birthday)
@@ -60,7 +62,20 @@ plot(lin.mod)
 
 ## … or even just some simpler plots, like a boxplot.
 
-plot(check_heteroscedasticity(lin.mod)) # General
+hetcheck <- check_heteroscedasticity(lin.mod)
+## check see:::.plot_diag_homogeneity to see what's going on
+## similar plots, "from scratch", still haven't dug into why
+## stat_sum() to show repeated points
+h <- broom::augment(lin.mod)
+gg0 <- ggplot(h, aes(x=`as.factor(Group)`, y = sqrt(abs(.std.resid)))) + stat_sum()
+print(gg0)
+sm <- geom_smooth(method = "loess", aes(group = 1))
+print(gg0 + sm)
+
+gg1 <- gg0 + aes(x=.fitted)
+print(gg1+sm)
+
+plot(hetcheck) # General
 # heteroscedasticity: checks for the assumption of homogeneity in variance. This plot suggests that there is not 
 # equal variance as the reference line is not flat and horizontal.
 

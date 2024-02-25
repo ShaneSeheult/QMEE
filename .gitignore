@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 .Rproj.user
 .Rhistory
 .RData
@@ -16,7 +15,6 @@ homRead.rda
 Fig01.pdf
 Fig02.pdf
 Fig03.pdf
-=======
 *~
 .gitignore
->>>>>>> 5b330f61eee2bef12f97c98cc96e585e95a1d943
+*.Rout
