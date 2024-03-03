@@ -30,44 +30,31 @@ dd <- readRDS("PupBirthdaysClean.rds")
 summary(dd)
 ```
 ## Hypothesis
-Note, A hypothesis for my project can be found within the following directory: ShaneSeheult/QMEE/Assignment04/QMEE_assignment_04.pdf
+Note, A hypothesis for my project can be found within the following directory: ShaneSeheult/QMEE/Assignment04/QMEE_Assignment_04.pdf
 
-I have copied the text from this assignment and pasted it below:
+I have copied the text from this assignment and pasted it below. **Note** it has been edited to account for feedback from a previous assignment:
 
-My null hypothesis (h0) is that there is no difference between birthdays of pupsborn to wild-caught or captive bats. In other words, the pups are drawn from the same population. My alternaitve hypothesis (h1) is that pups born from Captive bats will give birth earlier compared to Wild-Caught bats. 
+My null hypothesis (h0) is that there is no difference between birthdays of pups born to wild-caught or captive bats. In other words, the pups are drawn from the same population. My alternative hypothesis (h1) is that pups born from Captive bats will give birth earlier compared to Wild-Caught bats. This is a directional hypothesis.
 
 ## General Linear Model
-Since my response variable **Julian.Date** is a continuous variable and is positively skewed, I believe it is more appropriate to use family = Gamma as opposed to family = Poisson. I will also follow the advice providied in class and set the link function = "log"
+Since my response variable **Julian.Date** is a continuous variable and is positively skewed, I believe it is more appropriate to use family = Gamma as opposed to family = Poisson. I will also follow the advice provided in class and set the link function = "log"
 
 ```{r}
-Birth.glm.mod_02 <- glm(Julian.Date ~ Group, data = dd, family = Gamma(link = "log"))
-summary(Birth.glm.mod_02)
+Birth.glm.mod <- glm(Julian.Date ~ Group, data = dd, family = Gamma(link = "log"))
+summary(Birth.glm.mod)
 ```
-
-## Diagnostic Plot 
 ```{r}
-plot(Birth.glm.mod)
-
-acf(residuals(Birth.glm.mod))
-```
-
-
-
-## Test of Using Family
-```{r}
-Birth.glm.mod.gamma <- update(Birth.glm.mod, family = Gamma(link = "log"))
-simulateResiduals(Birth.glm.mod.gamma, plot = TRUE)
-```
-
-
-```{r}
-
 Figure_01 <- ggplot(dd, aes(Group,Julian.Date)) +
-  geom_point() +
-  geom_smooth(method = "glm", color = "red", formula = y~x, method.args = list(family = "Gamma"))
+  geom_point() + stat_sum() +
+  geom_smooth(method = "glm", color = "red", 
+              formula = y~x, 
+              method.args = list(family = "Gamma"),
+              aes(group = 1))
 Figure_01
-
 ```
+This Figure shows the distribution of Birthdays (in Julian Date) for each group and a general linear model (GLM) fit to the data.
+
+
 
 The following is a recreation from code provided as feedback from a previous assignment where I fit a linear model to the data.
 ```{r}
@@ -78,6 +65,47 @@ print(gg0 + sm)
 gg1 <- gg0 + aes(x=.fitted)
 print(gg1+sm)
 ```
+
+## Diagnostic Plot 
+```{r}
+plot(Birth.glm.mod)
+acf(residuals(Birth.glm.mod))
+```
+
+**Figure 1:** This plot evaluates
+**Figure 2:** This plot assess whether the residuals of the GLM model are normally distributed. Since the Std. Pearson residual values fall closely along the major diagonal line (i.e. *the dotted line*), we can conclude that the residuals are normally distributed.
+**Figure 3:** This plot visualizes the assumption of homoscedascity (i.e. the constant variance of residuals). The horizontal line suggests that the variance is consistent across the different levels of the variable group (i.e. Wild-caught and Captive).
+**Figure 5:** 
+
+plot(check_posterior_predictions(lin.mod2)) # Specific
+plot(check_heteroscedasticity(lin.mod2)) # General
+plot(check_distribution(lin.mod2)) # Specific / General
+plot(check_normality(lin.mod2)) # Specific
+
+# Note, I get an error saying 'For confidence bands, please install 'qqplotr'. I have done this, loaded it in the library and still
+# receive this error. I am sorry for this. I have kept it in as it still - for me - displays the plot.
+
+# Note, The above plots are all diagnostic plots. I have not adjusted the visual aspects o these graphs (good practice to be able to
+#     examine and summarize on the fly). These plots are all visualizing assumptions/errors associated with the model fit for the data and
+#     evaluate assumptions on the model. Visualizing these tests is important as it aids in interpretation - here, we are looking for deviations/
+#     absence of patterns in the residuals to evaluate how well the model is fitting the data. 
+# Some of these diagnostics are using generic methods (e.g. residuals vs fitted model) and some are using specific methods (residuals 
+#     vs predictors). I have outlined which plots are doing which.
+
+# posterior predictions: checks for discrepancies between data and fitted models. It helps to examine if the type of model being used 
+#     fits the model well
+# heteroscedasticity: checks for the assumption of equal variance. This plot suggests that there is not equal variance as the reference
+#     line is not flat and horizontal
+
+## Test of Using Family
+```{r}
+simulateResiduals(Birth.glm.mod, plot = TRUE)
+```
+
+
+
+
+
 ## Inferential Plot
 
 ```{r}
@@ -86,7 +114,7 @@ plot(pairs(emm.glm.mod)) + geom_vline(xintercept = c(0,-7,7), lty = 2) + xlim(-1
 plot(pairs(emm.glm.mod)) + geom_vline(xintercept = 0, lty = 2)
 ```
 Note, the two plots here are showing the same estimate. The difference between the two plots is the x-axis scale: the first plot includes the
-meaningfully relevant bounds of a difference of 7 days. See below for more details regarding the choice for these bounds. These results suggest an incredibly small, negative effect of Group such that pups born from Captive bats tend to be born earlier compared to pups born from wild-caught bats.
+meaningfully relevant bounds of a difference of 7 days. See below for more details regarding the choice for these bounds. These results suggest an incredibly small, negative effect of Group such that pups born from Captive bats tend to be born earlier compared to pups born from wild-caught bats. I would argue that this difference is negligable, but still shows a slight negativity (i.e. the confidence interval does not cross 0). The estimate also has a high degree of certainty (i.e. the 95 confidence interval range is relatively small).
 
 
 ## Biologically Meaningful Equivalence Bounds
