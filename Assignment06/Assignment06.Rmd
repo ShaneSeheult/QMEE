@@ -1,0 +1,72 @@
+---
+title: "BIO708 Assignment - Ian Dworkin"
+author: "Shane"
+date: "21/02/2024"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = TRUE}
+dd <- readRDS("PupBirthdaysClean.rds")
+summary(dd)
+```
+## 1. Measurement
+
+## Question 1a:
+**Theoretical Context:** The partiution date for animals can be climate depedent
+**Emperical Relational Structure:** 
+**Numerical Relational Structure:** 
+**Meaningful Inferences:** 
+
+## Question 1b:
+
+
+## 2. Effect Sizes and Meaningful Magnitudes
+
+## Question 2a:
+Note, I will consider my continuous response variable to be *Birthday* (in yyyy-mm-dd) and my predictors to be *Group* (either Captive or Wild-Caught) which can be found in the dataframe *dd* 
+
+For this data, I am examining the difference between birthdays between two groups - Captive and Wild-caught animals - to see if there is a meaningful effect of group on birthday. Note *Wild-Caught* animals were pups born from moms caught at a maternity roost in southern Ontario, Canada about threew eeks before partuition whereas *Captive* animals wree pups born from moms that had been in captivity for an extended period of time during hibernation and prior to partution. 
+
+For this data, I believe the most appropriate measure of effect size would be **Cohen's d**. Note, Cohen's d scales the differences in mean between group by the pooled standard deviation, which serves as a measur of biological variation.
+
+## Question 2b: 
+
+## Question 2c:
+
+## Question 2d:
+
+## Question 2e:
+```{r, include=TRUE, fig.align="center", echo = FALSE, out.width= "400px", fig.cap=c("Figure 1: BoMM Figure included in Assignment")}
+knitr::include_graphics("Figure01.png")
+```
+Below discusses my interpretation and inferences I would draw (do not forget about the counter null) from the following estimates:
+
+**Estimate 1:** This estimate is a small, positive effect of mutant type 1. However, this estimate is not considered **meaningful** in biological context
+**Estimate 2:**
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
