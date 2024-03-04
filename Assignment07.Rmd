@@ -30,19 +30,23 @@ dd <- readRDS("PupBirthdaysClean.rds")
 summary(dd)
 ```
 ## Hypothesis
-Note, A hypothesis for my project can be found within the following directory: ShaneSeheult/QMEE/Assignment04/QMEE_Assignment_04.pdf
+A hypothesis for my project can be found within the following directory: ShaneSeheult/QMEE/Assignment04/QMEE_Assignment_04.pdf
 
-I have copied the text from this assignment and pasted it below. **Note** it has been edited to account for feedback from a previous assignment:
+I have copied the text from this assignment and pasted it below. **Note:** it has been edited to account for feedback from a previous assignment:
 
-My null hypothesis (h0) is that there is no difference between birthdays of pups born to wild-caught or captive bats. In other words, the pups are drawn from the same population. My alternative hypothesis (h1) is that pups born from Captive bats will give birth earlier compared to Wild-Caught bats. This is a directional hypothesis.
+My null hypothesis (h0) is that there is no difference between birthdays of pups born to WCaught or Captive bats. In other words, the pups are drawn from the same population. My alternative hypothesis (h1) is that pups born from Captive bats will give birth earlier compared to Wild-Caught bats. This is a directional hypothesis.
 
 ## General Linear Model
-Since my response variable **Julian.Date** is a continuous variable and is positively skewed, I believe it is more appropriate to use family = Gamma as opposed to family = Poisson. I will also follow the advice provided in class and set the link function = "log"
+Since my response variable **Julian.Date** is a continuous variable and is positively skewed, I believe it is more appropriate to use the Gamma family  as opposed to the Poisson family. I will also follow the advice provided in class and set the link function = "log"
 
 ```{r}
 Birth.glm.mod <- glm(Julian.Date ~ Group, data = dd, family = Gamma(link = "log"))
 summary(Birth.glm.mod)
 ```
+Note, the intercept (5.118) corresponds to the estimate for the *Captive* Group. The estimate for the *Wild-Caught* group is then compared to the estimate for the *Captive* group. For every unit change in the Intercept estimate value, the value for *Wild-Caught* group increases by ~0.011. In other words, estimates for the *Wild-Caught* group are 0.011 times larger than those for *Captive* group. Thus, the value 0.011 can be considered a slope comparing the *Wild-Caught* and *Captive* group. 
+
+Notice the Q1 (-0.006) and Q3 (0.007) values are similar in absolute value and the median (0.0008) is close to zero, suggesting this model is a reasonable fit. Note, that the Min (-0.023) and Max (0.025) are similar to each other and relatively small (i.e. >3), meaning the residuals do **not** deviate extremely from a normal distribution. Again, these checks suggest this model is a good fit for the data.
+
 ```{r}
 Figure_01 <- ggplot(dd, aes(Group,Julian.Date)) +
   geom_point() + stat_sum() +
@@ -50,10 +54,9 @@ Figure_01 <- ggplot(dd, aes(Group,Julian.Date)) +
               formula = y~x, 
               method.args = list(family = "Gamma"),
               aes(group = 1))
-Figure_01
+print(Figure_01)
 ```
 This Figure shows the distribution of Birthdays (in Julian Date) for each group and a general linear model (GLM) fit to the data.
-
 
 
 The following is a recreation from code provided as feedback from a previous assignment where I fit a linear model to the data.
@@ -72,38 +75,19 @@ plot(Birth.glm.mod)
 acf(residuals(Birth.glm.mod))
 ```
 
-**Figure 1:** This plot evaluates
-**Figure 2:** This plot assess whether the residuals of the GLM model are normally distributed. Since the Std. Pearson residual values fall closely along the major diagonal line (i.e. *the dotted line*), we can conclude that the residuals are normally distributed.
-**Figure 3:** This plot visualizes the assumption of homoscedascity (i.e. the constant variance of residuals). The horizontal line suggests that the variance is consistent across the different levels of the variable group (i.e. Wild-caught and Captive).
-**Figure 5:** 
-
-plot(check_posterior_predictions(lin.mod2)) # Specific
-plot(check_heteroscedasticity(lin.mod2)) # General
-plot(check_distribution(lin.mod2)) # Specific / General
-plot(check_normality(lin.mod2)) # Specific
-
-# Note, I get an error saying 'For confidence bands, please install 'qqplotr'. I have done this, loaded it in the library and still
-# receive this error. I am sorry for this. I have kept it in as it still - for me - displays the plot.
-
-# Note, The above plots are all diagnostic plots. I have not adjusted the visual aspects o these graphs (good practice to be able to
-#     examine and summarize on the fly). These plots are all visualizing assumptions/errors associated with the model fit for the data and
-#     evaluate assumptions on the model. Visualizing these tests is important as it aids in interpretation - here, we are looking for deviations/
-#     absence of patterns in the residuals to evaluate how well the model is fitting the data. 
-# Some of these diagnostics are using generic methods (e.g. residuals vs fitted model) and some are using specific methods (residuals 
-#     vs predictors). I have outlined which plots are doing which.
-
-# posterior predictions: checks for discrepancies between data and fitted models. It helps to examine if the type of model being used 
-#     fits the model well
-# heteroscedasticity: checks for the assumption of equal variance. This plot suggests that there is not equal variance as the reference
-#     line is not flat and horizontal
+- **Figure 1:** This plot evaluates residuals (i.e. the error associated with the model) and the predicted mean values. If the assumptions of the GLM are valid, then we would expect the points to be randomly distributed around the horizontal line (*the red line*). The red line is flat and close to 0 (which is good), but there seems to be a pattern associated with the residuals (i.e. they are dispersed across 2 x-values). This is likely because the model uses a two-level categorical variable (*Group*) as the predictor variable. This plot assess whether the relationship between the response variable and the predictor variable is linear.
+- **Figure 2:** This plot assess whether the residuals of the GLM model are normally distributed. Since the Std. Pearson residual values fall closely along the major diagonal line (i.e. *the dotted line*), we can conclude that the residuals are normally distributed. Thus, the data has residuals that follow a normal distribution.
+- **Figure 3:** This plot is very similar to Figure 1, except the y-axis values are re-scalled such that the residuals are standardized. We would except the average residuals to be randomly distributed around a value of 1. Note, the red line should be flat and have a y-intercept at around 1 (in this case, it does). In this figure, we see a similar pattern observed in Figure 1, again likely due to the model being based on a 2-level categorical predictor variable (*Group*). This plot visualizes the assumption of homoscedascity (i.e. the constant variance of residuals). The horizontal line suggests that the variance is consistent across the different levels of the variable group (i.e. Wild-caught and Captive).
+- **Figure 4:** This plot shows the standardized residuals as a function of Leverage, which is a measure of how much an observation influences the fit of the model. Note, most of the points have a relatively low leverage. Thus, the model seems to be resilient to data points: no points are being poorly fit by the model or affecting the results of the model fit.
+- **Figure 5:** This plot assess the autocorrelation of the residuals across a range of lag values. The blue dashed lines represent upper and lower cutoff bounds. There are several spikes for autocorelation including at lag 1, 8, 9, 10, and 14.  Autocorelation suggests that there is a lack of information being supplied to the model to make accurate estimations. This is somewhat inutative for this data set - there are likely better / more informative predictors for birthday than the group which the bat belongs to.
 
 ## Test of Using Family
 ```{r}
 simulateResiduals(Birth.glm.mod, plot = TRUE)
 ```
+Looking at the left-sided plot, we see that this model (1) does not have significant outliers, (2) has little effect from over dispersion, and  does not deviate from normality (as indicated by a ns KS test). Note, over dispersion is not super relevant for this data considering I have used the Gamma family for the GLM model.
 
-
-
+The right-sided plot suggests that the variances between our groups are similar (as indicated by a ns Levene Test) and there is no significant deviations from uniformity within groups.
 
 
 ## Inferential Plot
@@ -133,5 +117,3 @@ The authors suggest that "because newborn pups are altrical they are very depend
 For this reason, I will focus on the positive measure of effect, but these regions would be symmetrical around 0. Based on the developmental milestones presented in Mayberry & Faure (2014), I would designate an effect size of 14 days to have meaningful biological relevance. **Note:** although inspired from the literature, these relevance splits were influenced by a humanistic interpretation (taking days on the order of weeks) and thus should be taken lightly, not as hard thresholds, when interpreting the data.
 
 **Citation:** Mayberry, HW and Faure PA. (2014). Morphological, olfactory, and vocal development in big brown bats. *Biology Open* 4(1), 22-34.
-
-
