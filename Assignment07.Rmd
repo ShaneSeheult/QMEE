@@ -34,10 +34,10 @@ A hypothesis for my project can be found within the following directory: ShaneSe
 
 I have copied the text from this assignment and pasted it below. **Note:** it has been edited to account for feedback from a previous assignment:
 
-My null hypothesis (h0) is that there is no difference between birthdays of pups born to WCaught or Captive bats. In other words, the pups are drawn from the same population. My alternative hypothesis (h1) is that pups born from Captive bats will give birth earlier compared to Wild-Caught bats. This is a directional hypothesis.
+My null hypothesis (h0) is that there is no difference between birthdays of pups born to Wild-Caught or Captive bats. In other words, the pups are drawn from the same population. My alternative hypothesis (h1) is that pups born from Captive bats will give birth earlier compared to Wild-Caught bats. This is a directional hypothesis.
 
 ## General Linear Model
-Since my response variable **Julian.Date** is a continuous variable and is positively skewed, I believe it is more appropriate to use the Gamma family  as opposed to the Poisson family. I will also follow the advice provided in class and set the link function = "log"
+Since my response variable **Julian.Date** is a continuous variable and is positively skewed, I believe it is more appropriate to use the Gamma family as opposed to the Poisson family. I will also follow the advice provided in class and set the link function = "log"
 
 ```{r}
 Birth.glm.mod <- glm(Julian.Date ~ Group, data = dd, family = Gamma(link = "log"))
@@ -59,7 +59,7 @@ print(Figure_01)
 This Figure shows the distribution of Birthdays (in Julian Date) for each group and a general linear model (GLM) fit to the data.
 
 
-The following is a recreation from code provided as feedback from a previous assignment where I fit a linear model to the data.
+The following is a recreation from code provided as feedback from a previous assignment where I fit a linear model to the data. I am not sure if I need to include these plots, but figured it may be informative for the diagnostic and inferential plots.
 ```{r}
 h <- broom::augment(Birth.glm.mod)
 gg0 <- ggplot(h, aes(x= Group, y = sqrt(abs(.std.resid)))) + stat_sum()
@@ -69,7 +69,7 @@ gg1 <- gg0 + aes(x=.fitted)
 print(gg1+sm)
 ```
 
-## Diagnostic Plot 
+## Diagnostic Plots 
 ```{r}
 plot(Birth.glm.mod)
 acf(residuals(Birth.glm.mod))
@@ -98,8 +98,7 @@ plot(pairs(emm.glm.mod)) + geom_vline(xintercept = c(0,-7,7), lty = 2) + xlim(-1
 plot(pairs(emm.glm.mod)) + geom_vline(xintercept = 0, lty = 2)
 ```
 Note, the two plots here are showing the same estimate. The difference between the two plots is the x-axis scale: the first plot includes the
-meaningfully relevant bounds of a difference of 7 days. See below for more details regarding the choice for these bounds. These results suggest an incredibly small, negative effect of Group such that pups born from Captive bats tend to be born earlier compared to pups born from wild-caught bats. I would argue that this difference is negligable, but still shows a slight negativity (i.e. the confidence interval does not cross 0). The estimate also has a high degree of certainty (i.e. the 95 confidence interval range is relatively small).
-
+meaningfully relevant bounds of a difference of 7 days. **See below for more details regarding the choice for these bounds*. These results suggest an incredibly small, negative effect of Group such that pups born from Captive bats tend to be born earlier compared to pups born from wild-caught bats. This is congruent with my hypothesis, although the negative effect is very small and not biologically meaningful. I would argue that this difference is negligable, but still shows a slight negativity (i.e. the confidence interval does not cross 0). The estimate also has a high degree of certainty (i.e. the 95 confidence interval range is relatively small).
 
 ## Biologically Meaningful Equivalence Bounds
 
