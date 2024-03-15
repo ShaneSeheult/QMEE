@@ -1,0 +1,86 @@
+---
+title: "Assignment08"
+author: "Shane"
+date: "14/03/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Libraries:
+```{r}
+#install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+
+
+library(rstan)
+library(brms)
+options(brms.backend = "cmdstanr")
+library(rjags)
+library(ggplot2)
+
+library(lme4)
+library(brms)
+options(brms.backend = "cmdstanr")
+library(broom.mixed)
+library(purrr)
+library(dplyr)
+library(tidybayes)
+library(bayesplot)
+library(bayestestR)
+library(ggplot2); theme_set(theme_bw())
+library(see)
+options(ggplot2.discrete.colour= scale_color_okabeito)
+library(ggrastr)
+library(cowplot)
+```
+
+## Load Data
+```{r}
+dd <- readRDS("PupBirthdaysClean.rds")
+summary(dd)
+```
+
+## Formula 
+```{r}
+form01 <- Julian.Date ~ 1 + Group 
+
+get_prior(form01, dd)
+```
+
+```{r}
+b_prior <- c(set_prior("normal(150, 2.5)", "Intercept"),
+             set_prior("normal(0, 10)", "b"))
+
+test_prior <- function(p) {
+    ## https://discourse.mc-stan.org/t/suppress-all-output-from-brms-in-markdown-files/30117/3
+    capture.output(
+        b <- brm(form01, dd, prior = p,
+                 seed = 101,              ## reproducibility
+                 sample_prior = 'only',   ## for prior predictive sim
+                 chains = 1, iter = 500,  ## very short sample for convenience
+                 silent = 2, refresh = 0  ## be vewy vewy quiet ...
+                 )
+    )
+    p_df <- dd |> add_predicted_draws(b)
+    ## 'spaghetti plot' of prior preds
+    gg0 <- ggplot(p_df,aes(Julian.Date, .prediction)) + #, group=interaction(Subject,.draw))) +
+        geom_line(alpha = 0.1)
+    print(gg0)
+    invisible(b) ## return without printing
+}
+
+test_prior(b_prior)
+```
+
+
+
+
+## General Linear Model
+Since my response variable **Julian.Date** is a continuous variable and is positively skewed, I believe it is more appropriate to use the Gamma family as opposed to the Poisson family. I will also follow the advice provided in class and set the link function = "log"
+
+```{r}
+Birth.glm.mod <- glm(Julian.Date ~ Group, data = dd, family = Gamma(link = "log"))
+summary(Birth.glm.mod)
+```
