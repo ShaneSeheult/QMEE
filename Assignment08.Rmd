@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Libraries:
-```{r}
+```{r, warning=FALSE,, message=FALSE}
 #install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
 library(lme4)
 library(brms)
@@ -27,6 +27,8 @@ options(ggplot2.discrete.colour= scale_color_okabeito)
 library(ggrastr)
 library(cowplot)
 ```
+Note, I included all packages used in the example in class: I am sure some are not completely necessary here. I have also suppressed errors and warning messages as I was getting info about compiling and libraries loading addtional packages.
+
 
 ## Load Data
 ```{r}
@@ -52,7 +54,9 @@ b_prior_02 <- c(set_prior("normal(20, 2.5)", "Intercept"),
 ```
 Here, I have constrained the intercept and slope to reasonable values (I believe). I have set up a second prior (*b_prior_02*) with, what I think, is an unreasonable value - Setting the mean to 20 would imply that most bats give birth in the winter, which is an incredibly rare occurrence. For learning purposes, I am curious how this will affect the model.
 
-Note, the only thing that differs between these two models are the means set for each prior.
+Note, the only thing that differs between these two models are the means set for each prior where b_prior is an expected prior and b_prior_02 is an unreasonable prior given what is known about gestation and birth in bats. Again, I included it purely out of curiosity and to learn (i..e test limits) of the Bayesian Model. **Reasonable priors give rise to reasonable outputs!**
+
+These priors were set one at a time, assuming independence (this may not be good). However, this is the method that proves reliable. 
 
 ```{r}
 test_prior <- function(p) {
@@ -74,9 +78,13 @@ test_prior <- function(p) {
 }
 
 test_prior(b_prior)
-```
 
-```{r}
+# Note, this is code used in the example given in class.
+```
+This figure does not look like what was present in class. I believe it is because my predictor variable is a two-level factor (Group). These model diagnostics serve to see if the model is reasonable (i.e. would it be able to reproduce what is seen in my observed data).
+
+
+```{r, message=FALSE}
 model.lm <- lm(form01, dd)
 
 model.brms <-  brm(form01, dd, prior = b_prior, # This is the model of interest
