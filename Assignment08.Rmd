@@ -12,14 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Libraries:
 ```{r}
 #install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
-
-
-library(rstan)
-library(brms)
-options(brms.backend = "cmdstanr")
-library(rjags)
-library(ggplot2)
-
 library(lme4)
 library(brms)
 options(brms.backend = "cmdstanr")
@@ -42,17 +34,27 @@ dd <- readRDS("PupBirthdaysClean.rds")
 summary(dd)
 ```
 
-## Formula 
+## Formula to Use for Priors 
 ```{r}
 form01 <- Julian.Date ~ 1 + Group 
 
 get_prior(form01, dd)
 ```
 
-```{r}
-b_prior <- c(set_prior("normal(150, 2.5)", "Intercept"),
-             set_prior("normal(0, 10)", "b"))
+Here, we have the prior of Group (*GroupWildMCaught*), the Intercept with parameters - as set by Student t distribution with a df = 3, a mean equal to the median of Julian Date (168.5) and a standard deviation equal to the mean absolute deviation. Note, this intercept is somewhat irrational within Bayes Theorm: The function *get_prior* is estimating the intercept by examining the data and estimates the mean and SD based on observations within the data; however, this method is suitable to provide estimates. The df = 3 allows the model relaxes the restrictions of the Bayesian model while maintaining reasonable estimates.
 
+
+```{r}
+b_prior <- c(set_prior("normal(160, 2.5)", "Intercept"),
+             set_prior("normal(0, 10)", "b"))
+b_prior_02 <- c(set_prior("normal(20, 2.5)", "Intercept"),
+             set_prior("normal(0, 10)", "b"))
+```
+Here, I have constrained the intercept and slope to reasonable values (I believe). I have set up a second prior (*b_prior_02*) with, what I think, is an unreasonable value - Setting the mean to 20 would imply that most bats give birth in the winter, which is an incredibly rare occurrence. For learning purposes, I am curious how this will affect the model.
+
+Note, the only thing that differs between these two models are the means set for each prior.
+
+```{r}
 test_prior <- function(p) {
     ## https://discourse.mc-stan.org/t/suppress-all-output-from-brms-in-markdown-files/30117/3
     capture.output(
@@ -74,13 +76,106 @@ test_prior <- function(p) {
 test_prior(b_prior)
 ```
 
+```{r}
+model.lm <- lm(form01, dd)
 
+model.brms <-  brm(form01, dd, prior = b_prior, # This is the model of interest
+                   seed = 101,
+                   control = list(adapt_delta = 0.95))
+model.brms.02 <-  brm(form01, dd, prior = b_prior_02, # Note, I do not expect this model to be good.
+                   seed = 101,
+                   control = list(adapt_delta = 0.95))
+model.brms.def <- brm(form01, dd, # This model is the default, with no priors set
+                      seed = 101)
+```
+## Diagnose
+```{r}
+print(bayestestR::diagnostic_posterior(model.brms), digits = 4)
+```
+Here, we see our parameters of Group (i.e. b_GroupWildMCaught) and Intercept (i.e. b_Intercept). To my understanding, the measures of Rhat, Effective Sampling Size (ESS) and Monte Carlo Standard Error (MCSE) are are diagnostics of whether the set priors are reasonable. The Rhat values should hover around 1, which for both parameters in this model, they do. The ESS should be well beyond 400 (Note, this value is a recommendation), which is true for both parameters in this model (Group = 3825 and Intercept = 3525). and the MCSE should be "small enough" for scientific purposes. In this case, the MCSE values are incredibly small for both parameters.
 
+## Trace Plots 
+```{r}
+mcmc_trace(model.brms, regex_pars = "b_|sd_")
+```
+Shown in this plot are the diagnostics of four (4) chains displayed in slightly different shades of blue. The Figure displays history of samples bouncing around the mean for Intercept (Left) and Group (Right). These plots appear steady (i.e. no obscurities that stand out) and the chains appear to be following similar patterns (steady) as one another. 
 
-## General Linear Model
-Since my response variable **Julian.Date** is a continuous variable and is positively skewed, I believe it is more appropriate to use the Gamma family as opposed to the Poisson family. I will also follow the advice provided in class and set the link function = "log"
+## Looking at the Results of the Model
+```{r}
+summary(model.brms)
+```
+
 
 ```{r}
-Birth.glm.mod <- glm(Julian.Date ~ Group, data = dd, family = Gamma(link = "log"))
-summary(Birth.glm.mod)
+brms_modlist <- list(brms_default = model.brms.def, brms_reg = model.brms, brms_irreg = model.brms.02)
+res_bayes <- (brms_modlist
+    |> purrr::map_dfr(~ tidy(., conf.int = TRUE), .id = "model")
+)
+## need to do separately - different conf.method choices
+res_lm <- suppressMessages(model.lm
+    |> tidy(conf.int = TRUE, conf.method = "profile")
+    |> mutate(model = "lm", .before = 1)
+)
+res <- (bind_rows(res_lm, res_bayes)
+    |> select(-c(std.error, statistic, component, group))
+    |> filter(term != "(Intercept)")
+    |> mutate(facet = ifelse(grepl("^cor", term), "cor",
+                      ifelse(grepl("Days", term), "Days",
+                             "int")))
+    |> mutate(across(model, ~ factor(., levels = c("lm", names(brms_modlist)))))
+)
+
+ggplot(res, aes(estimate, term, colour = model, shape = model)) +
+    geom_pointrange(aes(xmin = conf.low, xmax = conf.high),
+                    position = position_dodge(width = 0.5)) +
+    facet_wrap(~ facet, scales = "free", ncol = 1) +
+    guides(colour = guide_legend(reverse=TRUE),
+           shape = guide_legend(reverse=TRUE))
 ```
+This figure is comparing the estimates determined from the different models: (1) brms_reg - which uses the manually set priors from model.brms, which is a normal distribution with a mean of 150 and SD of 2.5 for the intercept and a normal distribution with a mean of 0 and SD of 10 for b (*See b_prior above*), (2) brms_irreg - which uses the manually set priors from model.brms.02, which is a normal distribution with a mean of 20 and SD of 2.5 for the intercept and a normal distribution with a mean of 0 and SD of 10 for b (*See b_prior_02 above*), and (3) brms_default - which uses the default set parameters.
+
+As expected, the irregular model does not fit well to the others, as it is obscure relative to what is expected (i.e. the priors are incorrect / inappropriate). I will remove this model so we can see with clarity how the regular model and the default model compare:
+
+```{r}
+brms_modlist_clean <- list(brms_default = model.brms.def, brms_reg = model.brms)
+res_bayes <- (brms_modlist_clean
+    |> purrr::map_dfr(~ tidy(., conf.int = TRUE), .id = "model")
+)
+## need to do separately - different conf.method choices
+res_lm <- suppressMessages(model.lm
+    |> tidy(conf.int = TRUE, conf.method = "profile")
+    |> mutate(model = "lm", .before = 1)
+)
+res <- (bind_rows(res_lm, res_bayes)
+    |> select(-c(std.error, statistic, component, group))
+    |> filter(term != "(Intercept)")
+    |> mutate(facet = ifelse(grepl("^cor", term), "cor",
+                      ifelse(grepl("Days", term), "Days",
+                             "int")))
+    |> mutate(across(model, ~ factor(., levels = c("lm", names(brms_modlist)))))
+)
+
+ggplot(res, aes(estimate, term, colour = model, shape = model)) +
+    geom_pointrange(aes(xmin = conf.low, xmax = conf.high),
+                    position = position_dodge(width = 0.5)) +
+    facet_wrap(~ facet, scales = "free", ncol = 1) +
+    guides(colour = guide_legend(reverse=TRUE),
+           shape = guide_legend(reverse=TRUE))
+```
+This looks much better.
+
+Note, the estimates are very similar between the two models: The two models, despite having different priors set, are modelling the data well. I am not sure why the lm model is on a separate line for the Group estimate and not present for the sd_Observartion estimate. However, the Group estimate for the lm model seems to align closely with the brms_reg and brms_default models. 
+
+
+## Posterior Predictive Simulations , Compare with Data
+```{r}
+post_df1 <- dd |> add_predicted_draws(model.brms)
+gg1 <- ggplot(post_df1,
+              aes(Group, .prediction)) +
+    rasterise(geom_line(alpha = 0.1)) +
+    geom_point(aes(y=Julian.Date), col = "red") +
+    labs(y = "Day")
+print(gg1 + labs(title = "Priors (weird)"))
+```
+
+Note, this plot differs from the example showed in class in that it does not have the black lines showcasing the sampling from the Bayesian model. I *think* this is because my model uses a two-level factor as the predictor variable as opposed to a continuous variable, as used in the example. I  believe this figure is showing random selections of possible estimates (i.e. **red dots**) for each group as determined from the model. I am not certain to what this figure is meant to display or what information can be gleaned from it. 
