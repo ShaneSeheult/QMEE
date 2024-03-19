@@ -1,0 +1,16 @@
+What do you mean that the problem "could easily be solved using a frequentist approach"? (Bayes' *Rule* is math; while it is the mathematical foundation of Bayesian statistics, using Bayes' Rule is not a 'Bayesian (statistical) approach)
+
+* good for you for making the assumption that tests are independent explicit!
+* it would be good to know *why* they took the rapid test (have they been exposed? do they have symptoms?), as that will affect the prior probability
+
+hypothesis:
+
+* italicize the species name? (*Epitesicus fuscus* in Markdown)
+* a hypothesis of the form "is X similar to Y" should immediately raise a flag, as computing a summary of the strength of evidence (i.e. something like a p-value) requires testing for *equivalence*. Similarly, "do they differ" is tricky, because they do (no biological effects are zero).
+
+(OK, I see farther below that you are actually being careful about this)
+
+This is all very reasonable; the hard part will be determining the SESOI/deciding how to determine the SESOI
+
+
+

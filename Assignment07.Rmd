@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "GLM assignment"
 author: "Shane"
 date: "02/03/2024"
 output: html_document
@@ -25,7 +25,9 @@ library(DHARMa)
 ```
 
 ## Load Data
-```{r}
+```{r load_data}
+## BMB: naming chunks is good practice
+## BMB: good to remind us how to build this file
 dd <- readRDS("PupBirthdaysClean.rds")
 summary(dd)
 ```
@@ -34,18 +36,23 @@ A hypothesis for my project can be found within the following directory: ShaneSe
 
 I have copied the text from this assignment and pasted it below. **Note:** it has been edited to account for feedback from a previous assignment:
 
-My null hypothesis (h0) is that there is no difference between birthdays of pups born to Wild-Caught or Captive bats. In other words, the pups are drawn from the same population. My alternative hypothesis (h1) is that pups born from Captive bats will give birth earlier compared to Wild-Caught bats. This is a directional hypothesis.
+My null hypothesis (H0) is that there is no difference between birthdays of pups born to Wild-Caught or Captive bats. In other words, the pups are drawn from the same population. My alternative hypothesis (H1) is that pups born from Captive bats will give birth earlier compared to Wild-Caught bats. This is a directional hypothesis.
+
+*BMB*: this is fine. In general I actually prefer statements of *scientific* hypotheses, in plain language, rather than formally setting out H0 and H1.
 
 ## General Linear Model
-Since my response variable **Julian.Date** is a continuous variable and is positively skewed, I believe it is more appropriate to use the Gamma family as opposed to the Poisson family. I will also follow the advice provided in class and set the link function = "log"
 
-```{r}
+Since my response variable `Julian.Date` is a continuous variable and is positively skewed, I believe it is more appropriate to use the Gamma family as opposed to the Poisson family. I will also follow the advice provided in class and set the link function = "log"
+
+*BMB*: why would you consider Poisson at all in this case? I would say log-Normal, Gamma, and (if the coeff of variation is small) plain old Gaussian are the typical choices for positive continuous responses
+
+```{r GLM-fit}
 Birth.glm.mod <- glm(Julian.Date ~ Group, data = dd, family = Gamma(link = "log"))
 summary(Birth.glm.mod)
 ```
 Note, the intercept (5.118) corresponds to the estimate for the *Captive* Group. The estimate for the *Wild-Caught* group is then compared to the estimate for the *Captive* group. For every unit change in the Intercept estimate value, the value for *Wild-Caught* group increases by ~0.011. In other words, estimates for the *Wild-Caught* group are 0.011 times larger than those for *Captive* group. Thus, the value 0.011 can be considered a slope comparing the *Wild-Caught* and *Captive* group. 
 
-Notice the Q1 (-0.006) and Q3 (0.007) values are similar in absolute value and the median (0.0008) is close to zero, suggesting this model is a reasonable fit. Note, that the Min (-0.023) and Max (0.025) are similar to each other and relatively small (i.e. >3), meaning the residuals do **not** deviate extremely from a normal distribution. Again, these checks suggest this model is a good fit for the data.
+Notice the Q1 (-0.006) and Q3 (0.007) values are similar in absolute value and the median (0.0008) is close to zero, suggesting this model is a reasonable fit. Note, that the Min (-0.023) and Max (0.025) are similar to each other and relatively small (i.e. >3), meaning the residuals do **not** deviate extremely from a normal distribution. (*BMB*: or at least that they're symmetrically distributed ...) Again, these checks suggest this model is a good fit for the data.
 
 ```{r}
 Figure_01 <- ggplot(dd, aes(Group,Julian.Date)) +
@@ -53,21 +60,34 @@ Figure_01 <- ggplot(dd, aes(Group,Julian.Date)) +
   geom_smooth(method = "glm", color = "red", 
               formula = y~x, 
               method.args = list(family = "Gamma"),
+              ## BMB: should use family = Gamma(link = "log")
+              ## to match the model you fitted
+              ## (in this case, because you only have a single categorical
+              ## variable, the link function doesn't really make any
+              ## difference) {this would also be true with multiple
+              ## categorical variables if you included all interactions}
               aes(group = 1))
 print(Figure_01)
 ```
-This Figure shows the distribution of Birthdays (in Julian Date) for each group and a general linear model (GLM) fit to the data.
+This Figure shows the distribution of Birthdays (in Julian Date) for each group and a generalized linear model (GLM) fit to the data.
 
 
 The following is a recreation from code provided as feedback from a previous assignment where I fit a linear model to the data. I am not sure if I need to include these plots, but figured it may be informative for the diagnostic and inferential plots.
 ```{r}
 h <- broom::augment(Birth.glm.mod)
 gg0 <- ggplot(h, aes(x= Group, y = sqrt(abs(.std.resid)))) + stat_sum()
-sm <- geom_smooth(method = "glm", formula = y~x, method.args = list(family = "Gamma"), aes(group = 1))
+sm <- geom_smooth(method = "glm",
+                  formula = y~x,
+                  method.args = list(family = "Gamma"), aes(group = 1))
 print(gg0 + sm)
 gg1 <- gg0 + aes(x=.fitted)
 print(gg1+sm)
 ```
+
+**BMB**: you probably shouldn't use a Gamma GLM for the diagnostic
+plots: OLS/Gaussian models are probably good enough (and in this case
+you don't even really need a model since there are only two possible
+predictions/fitted values (one for each group)
 
 ## Diagnostic Plots 
 ```{r}
@@ -75,11 +95,13 @@ plot(Birth.glm.mod)
 acf(residuals(Birth.glm.mod))
 ```
 
+BMB: ACF only makes sense for time-series data (or *possibly* 1-D spatial data, e.g. measurements along a transect)
+
 - **Figure 1:** This plot evaluates residuals (i.e. the error associated with the model) and the predicted mean values. If the assumptions of the GLM are valid, then we would expect the points to be randomly distributed around the horizontal line (*the red line*). The red line is flat and close to 0 (which is good), but there seems to be a pattern associated with the residuals (i.e. they are dispersed across 2 x-values). This is likely because the model uses a two-level categorical variable (*Group*) as the predictor variable. This plot assess whether the relationship between the response variable and the predictor variable is linear.
 - **Figure 2:** This plot assess whether the residuals of the GLM model are normally distributed. Since the Std. Pearson residual values fall closely along the major diagonal line (i.e. *the dotted line*), we can conclude that the residuals are normally distributed. Thus, the data has residuals that follow a normal distribution.
-- **Figure 3:** This plot is very similar to Figure 1, except the y-axis values are re-scalled such that the residuals are standardized. We would except the average residuals to be randomly distributed around a value of 1. Note, the red line should be flat and have a y-intercept at around 1 (in this case, it does). In this figure, we see a similar pattern observed in Figure 1, again likely due to the model being based on a 2-level categorical predictor variable (*Group*). This plot visualizes the assumption of homoscedascity (i.e. the constant variance of residuals). The horizontal line suggests that the variance is consistent across the different levels of the variable group (i.e. Wild-caught and Captive).
+- **Figure 3:** This plot is very similar to Figure 1, except the y-axis values are re-scaled such that the residuals are standardized. We would except the average residuals to be randomly distributed around a value of 1. Note, the red line should be flat and have a y-intercept at around 1 (in this case, it does). In this figure, we see a similar pattern observed in Figure 1, again likely due to the model being based on a 2-level categorical predictor variable (*Group*). This plot visualizes the assumption of homoscedasticity (i.e. the constant variance of residuals). The horizontal line suggests that the variance is consistent across the different levels of the variable group (i.e. Wild-caught and Captive).
 - **Figure 4:** This plot shows the standardized residuals as a function of Leverage, which is a measure of how much an observation influences the fit of the model. Note, most of the points have a relatively low leverage. Thus, the model seems to be resilient to data points: no points are being poorly fit by the model or affecting the results of the model fit.
-- **Figure 5:** This plot assess the autocorrelation of the residuals across a range of lag values. The blue dashed lines represent upper and lower cutoff bounds. There are several spikes for autocorelation including at lag 1, 8, 9, 10, and 14.  Autocorelation suggests that there is a lack of information being supplied to the model to make accurate estimations. This is somewhat inutative for this data set - there are likely better / more informative predictors for birthday than the group which the bat belongs to.
+- **Figure 5:** This plot assesses the autocorrelation of the residuals across a range of lag values. The blue dashed lines represent upper and lower cutoff bounds. There are several spikes for autocorelation including at lag 1, 8, 9, 10, and 14.  Autocorrelation suggests that there is a lack of information being supplied to the model to make accurate estimations. This is somewhat inutative for this data set - there are likely better / more informative predictors for birthday than the group which the bat belongs to.
 
 ## Test of Using Family
 ```{r}
@@ -98,7 +120,9 @@ plot(pairs(emm.glm.mod)) + geom_vline(xintercept = c(0,-7,7), lty = 2) + xlim(-1
 plot(pairs(emm.glm.mod)) + geom_vline(xintercept = 0, lty = 2)
 ```
 Note, the two plots here are showing the same estimate. The difference between the two plots is the x-axis scale: the first plot includes the
-meaningfully relevant bounds of a difference of 7 days. **See below for more details regarding the choice for these bounds*. These results suggest an incredibly small, negative effect of Group such that pups born from Captive bats tend to be born earlier compared to pups born from wild-caught bats. This is congruent with my hypothesis, although the negative effect is very small and not biologically meaningful. I would argue that this difference is negligable, but still shows a slight negativity (i.e. the confidence interval does not cross 0). The estimate also has a high degree of certainty (i.e. the 95 confidence interval range is relatively small).
+meaningfully relevant bounds of a difference of 7 days. **See below for more details regarding the choice for these bounds*. These results suggest an incredibly small, negative effect of Group such that pups born from Captive bats tend to be born earlier compared to pups born from wild-caught bats. This is congruent with my hypothesis, although the negative effect is very small and not biologically meaningful. I would argue that this difference is negligible, but still shows a slight negativity (i.e. the confidence interval does not cross 0). The estimate also has a high degree of certainty (i.e. the 95 confidence interval range is relatively small).
+
+BMB: Plotting pairs hardly makes sense since there are only two groups/only one contrast anyway ...
 
 ## Biologically Meaningful Equivalence Bounds
 
@@ -111,8 +135,39 @@ A summary of these developmental milestones for big brown bats reported by Maybe
 - **Flight:** pups make flight attempts around PND7/8 by flapping their wings while hanging. Pups begin hopping by PND 13, pefrom controlled falls / flight attempts by PND 21, and achieve true powered flight by PND 27/28.
 - **Attachment to Mother:** pups tend to stop weaning by PND 13/14.
 
-The authors suggest that "because newborn pups are altrical they are very dependent on their mother for nutrition, warmth and protection and are consistently found attached to and nursing from her until PND 13/14" (Mayberry and Faure, 2014). For these reasons, I will designate the meaningfully relevant measure of effect to be set at 14 days (i.e. 2 weeks) as the pups development would be drastically lagged. I would designate the grey area to start at 7 days (i.e. 1 week)
+The authors suggest that "because newborn pups are altricial they are very dependent on their mother for nutrition, warmth and protection and are consistently found attached to and nursing from her until PND 13/14" (Mayberry and Faure, 2014). For these reasons, I will designate the meaningfully relevant measure of effect to be set at 14 days (i.e. 2 weeks) as the pup's development would be drastically lagged. I would designate the grey area to start at 7 days (i.e. 1 week)
 
 For this reason, I will focus on the positive measure of effect, but these regions would be symmetrical around 0. Based on the developmental milestones presented in Mayberry & Faure (2014), I would designate an effect size of 14 days to have meaningful biological relevance. **Note:** although inspired from the literature, these relevance splits were influenced by a humanistic interpretation (taking days on the order of weeks) and thus should be taken lightly, not as hard thresholds, when interpreting the data.
 
 **Citation:** Mayberry, HW and Faure PA. (2014). Morphological, olfactory, and vocal development in big brown bats. *Biology Open* 4(1), 22-34.
+
+BMB: this is useful, but I would
+
+```{r}
+confint(Birth.glm.mod)
+```
+
+or
+
+```{r}
+options(pillar.sigfig = 3)
+(broom::tidy(Birth.glm.mod, exponentiate = TRUE, conf.int = TRUE)
+    |> filter(term != "(Intercept)")
+    |> select(estimate, conf.low, conf.high)
+    |> as.data.frame()
+)
+```
+
+So, it took me way too long to get here, but I think there is a fundamental problem, which is that *Julian date is not really a ratio variable in this context*; it happens to be a positive value, but zero is only meaningful if the beginning/minimum value of birthday is really January 1 ...).
+
+It's weird, but you could satisfy the terms of the assignment by using an *identity link* with the Gamma ...
+
+```{r}
+mod2 <- update(Birth.glm.mod, family = Gamma(link = "identity"))
+```
+
+However, as also pointed out, this doesn't make much *statistical* difference when we are comparing two groups (and the proportional differences in the response are small). However, doing it this way gives us a more interpretable approx 2-day difference rather than a 
+
+It's still interesting that the difference is statistically significant but (according to you) biologically small?
+
+mark: 2
