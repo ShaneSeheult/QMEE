@@ -27,7 +27,7 @@ options(ggplot2.discrete.colour= scale_color_okabeito)
 library(ggrastr)
 library(cowplot)
 ```
-Note, I included all packages used in the example in class: I am sure some are not completely necessary here. I have also suppressed errors and warning messages as I was getting info about compiling and libraries loading addtional packages.
+Note, I included all packages used in the example in class: I am sure some are not completely necessary here. I have also suppressed errors and warning messages as I was getting info about compiling and libraries loading additional packages.
 
 
 ## Load Data
@@ -43,7 +43,7 @@ form01 <- Julian.Date ~ 1 + Group
 get_prior(form01, dd)
 ```
 
-Here, we have the prior of Group (*GroupWildMCaught*), the Intercept with parameters - as set by Student t distribution with a df = 3, a mean equal to the median of Julian Date (168.5) and a standard deviation equal to the mean absolute deviation. Note, this intercept is somewhat irrational within Bayes Theorm: The function *get_prior* is estimating the intercept by examining the data and estimates the mean and SD based on observations within the data; however, this method is suitable to provide estimates. The df = 3 allows the model relaxes the restrictions of the Bayesian model while maintaining reasonable estimates.
+Here, we have the prior of Group (*GroupWildMCaught*), the Intercept with parameters - as set by Student t distribution with a df = 3, a mean equal to the median of Julian Date (168.5) and a standard deviation equal to the mean absolute deviation. Note, this intercept is somewhat irrational within Bayes Theorm: The function *get_prior* is estimating the intercept by examining the data and estimates the mean and SD based on observations within the data; however, this method is suitable to provide estimates. The df = 3 allows the model relaxes the restrictions of the Bayesian model while maintaining reasonable estimates. **BMB**: "relaxes the restrictions of the Bayesian model" sounds a bit loose/vague, it sounds like there's something non-Bayesian about it (what it does is to allow for *heavy tails* in the prior distribution ...
 
 
 ```{r}
@@ -56,7 +56,7 @@ Here, I have constrained the intercept and slope to reasonable values (I believe
 
 Note, the only thing that differs between these two models are the means set for each prior where b_prior is an expected prior and b_prior_02 is an unreasonable prior given what is known about gestation and birth in bats. Again, I included it purely out of curiosity and to learn (i..e test limits) of the Bayesian Model. **Reasonable priors give rise to reasonable outputs!**
 
-These priors were set one at a time, assuming independence (this may not be good). However, this is the method that proves reliable. 
+These priors were set one at a time, assuming independence (this may not be good). However, this is the method that proves reliable.  **BMB**: yes, awkward to do anything else.
 
 ```{r}
 test_prior <- function(p) {
@@ -71,8 +71,8 @@ test_prior <- function(p) {
     )
     p_df <- dd |> add_predicted_draws(b)
     ## 'spaghetti plot' of prior preds
-    gg0 <- ggplot(p_df,aes(Julian.Date, .prediction)) + #, group=interaction(Subject,.draw))) +
-        geom_line(alpha = 0.1)
+    gg0 <- ggplot(p_df,aes(Group, .prediction)) + #, group=interaction(Subject,.draw))) +
+        geom_jitter(height=0) + geom_violin(fill = "red", alpha =  0.4)
     print(gg0)
     invisible(b) ## return without printing
 }
@@ -83,6 +83,7 @@ test_prior(b_prior)
 ```
 This figure does not look like what was present in class. I believe it is because my predictor variable is a two-level factor (Group). These model diagnostics serve to see if the model is reasonable (i.e. would it be able to reproduce what is seen in my observed data).
 
+**BMB**: you confused predictor and response!
 
 ```{r, message=FALSE}
 model.lm <- lm(form01, dd)
@@ -102,11 +103,15 @@ print(bayestestR::diagnostic_posterior(model.brms), digits = 4)
 ```
 Here, we see our parameters of Group (i.e. b_GroupWildMCaught) and Intercept (i.e. b_Intercept). To my understanding, the measures of Rhat, Effective Sampling Size (ESS) and Monte Carlo Standard Error (MCSE) are are diagnostics of whether the set priors are reasonable. The Rhat values should hover around 1, which for both parameters in this model, they do. The ESS should be well beyond 400 (Note, this value is a recommendation), which is true for both parameters in this model (Group = 3825 and Intercept = 3525). and the MCSE should be "small enough" for scientific purposes. In this case, the MCSE values are incredibly small for both parameters.
 
+**BMB**: interesting that Rhat<1. I'm not sure if this is theoretically impossible (i.e. a computational issue) or just unlikely. (Not something to worry about)
+
 ## Trace Plots 
 ```{r}
 mcmc_trace(model.brms, regex_pars = "b_|sd_")
 ```
 Shown in this plot are the diagnostics of four (4) chains displayed in slightly different shades of blue. The Figure displays history of samples bouncing around the mean for Intercept (Left) and Group (Right). These plots appear steady (i.e. no obscurities that stand out) and the chains appear to be following similar patterns (steady) as one another. 
+
+**BMB**: the 'new' version of trace plots is recommended (but this is fine)
 
 ## Looking at the Results of the Model
 ```{r}
@@ -172,18 +177,23 @@ ggplot(res, aes(estimate, term, colour = model, shape = model)) +
 ```
 This looks much better.
 
-Note, the estimates are very similar between the two models: The two models, despite having different priors set, are modelling the data well. I am not sure why the lm model is on a separate line for the Group estimate and not present for the sd_Observartion estimate. However, the Group estimate for the lm model seems to align closely with the brms_reg and brms_default models. 
+Note, the estimates are very similar between the two models: The two models, despite having different priors set, are modelling the data well. I am not sure why the lm model is on a separate line for the Group estimate and not present for the sd_Observation estimate. However, the Group estimate for the lm model seems to align closely with the brms_reg and brms_default models. 
 
+**BMB**: this is just a difference in naming (not quite sure where that happened)
 
 ## Posterior Predictive Simulations , Compare with Data
 ```{r}
 post_df1 <- dd |> add_predicted_draws(model.brms)
 gg1 <- ggplot(post_df1,
               aes(Group, .prediction)) +
-    rasterise(geom_line(alpha = 0.1)) +
-    geom_point(aes(y=Julian.Date), col = "red") +
-    labs(y = "Day")
+    geom_violin(fill = "gray") +
+    stat_sum(data=dd, aes(y=Julian.Date), col = "red") +
+    labs(y = "Day") +
+    scale_size(breaks = c(1, 5, 10)) 
 print(gg1 + labs(title = "Priors (weird)"))
 ```
 
 Note, this plot differs from the example showed in class in that it does not have the black lines showcasing the sampling from the Bayesian model. I *think* this is because my model uses a two-level factor as the predictor variable as opposed to a continuous variable, as used in the example. I  believe this figure is showing random selections of possible estimates (i.e. **red dots**) for each group as determined from the model. I am not certain to what this figure is meant to display or what information can be gleaned from it. 
+
+**BMB**: see adjusted version.  Mark: 2.2
+
